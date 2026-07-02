@@ -1,19 +1,21 @@
 // GitHub-style activity grid. Columns = weeks, rows = weekdays.
-// Each square fills with a grayscale step based on that day's score (0..1).
+// Each square fills with a grayscale step based on that day's score (0..1);
+// today is ringed in blue (blue = activity). Columns cascade in on mount.
 
-import React, { useMemo, useRef } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { colors, spacing, font, weight, tracking, fontFamily } from '../theme';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, Animated, AccessibilityInfo } from 'react-native';
+import { colors, spacing, font, tracking, fontFamily } from '../theme';
 import { dayKey, addDays, todayKey } from '../utils/dates';
 
 const SQUARE = 14;
 const GAP = 3;
 const WEEKS = 18; // ~4 months of history
 const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const CASCADE_STEP_MS = 14;
 
 // Map a 0..1 score to a grayscale fill step.
 function colorForScore(score) {
-  if (score <= 0) return colors.gray100; // faint - almost invisible against black, but present
+  if (score <= 0) return colors.gray100;
   if (score < 0.34) return colors.gray400;
   if (score < 0.67) return colors.gray600;
   if (score < 1) return colors.gray700;
@@ -27,7 +29,6 @@ export default function ContributionGrid({ scoreFor }) {
   // Build columns of 7 days each, aligned so each column starts on Sunday.
   const weeks = useMemo(() => {
     const end = new Date();
-    // Walk back to the Sunday on/just before the start of our window.
     const start = addDays(end, -(WEEKS * 7 - 1));
     start.setDate(start.getDate() - start.getDay()); // back up to Sunday
 
@@ -43,6 +44,30 @@ export default function ContributionGrid({ scoreFor }) {
     }
     return cols;
   }, []);
+
+  // Cascade: one shared driver; each column reads a staggered window of it.
+  const cascade = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    let cancelled = false;
+    let anim = null;
+    AccessibilityInfo.isReduceMotionEnabled().then((reduced) => {
+      if (cancelled) return;
+      if (reduced) {
+        cascade.setValue(1);
+        return;
+      }
+      anim = Animated.timing(cascade, {
+        toValue: 1,
+        duration: weeks.length * CASCADE_STEP_MS + 220,
+        useNativeDriver: true,
+      });
+      anim.start();
+    });
+    return () => {
+      cancelled = true;
+      if (anim) anim.stop();
+    };
+  }, [cascade, weeks.length]);
 
   return (
     <View>
@@ -69,30 +94,37 @@ export default function ContributionGrid({ scoreFor }) {
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
           <View style={styles.grid}>
-            {weeks.map((col, ci) => (
-              <View key={ci} style={styles.col}>
-                {col.map((key) => {
-                  const future = key > today;
-                  const score = future ? 0 : scoreFor(key);
-                  const fill = colorForScore(score);
-                  const isToday = key === today;
-                  // A white-on-white ring would be invisible on a full day —
-                  // render the ring as a black gap around the square instead.
-                  const ringColor = fill === colors.white ? colors.black : colors.white;
-                  return (
-                    <View
-                      key={key}
-                      testID="grid-square"
-                      style={[
-                        styles.square,
-                        { backgroundColor: future ? 'transparent' : fill },
-                        isToday && [styles.todayRing, { borderColor: ringColor }],
-                      ]}
-                    />
-                  );
-                })}
-              </View>
-            ))}
+            {weeks.map((col, ci) => {
+              // Each column fades in over its own slice of the shared driver.
+              const from = ci / (weeks.length + 4);
+              const to = Math.min(1, (ci + 4) / (weeks.length + 4));
+              const colOpacity = cascade.interpolate({
+                inputRange: [from, to],
+                outputRange: [0, 1],
+                extrapolate: 'clamp',
+              });
+              return (
+                <Animated.View key={ci} style={[styles.col, { opacity: colOpacity }]}>
+                  {col.map((key) => {
+                    const future = key > today;
+                    const score = future ? 0 : scoreFor(key);
+                    const fill = colorForScore(score);
+                    const isToday = key === today;
+                    return (
+                      <View
+                        key={key}
+                        testID="grid-square"
+                        style={[
+                          styles.square,
+                          { backgroundColor: future ? 'transparent' : fill },
+                          isToday && styles.todayRing,
+                        ]}
+                      />
+                    );
+                  })}
+                </Animated.View>
+              );
+            })}
           </View>
         </ScrollView>
       </View>
@@ -129,10 +161,11 @@ const styles = StyleSheet.create({
   square: {
     width: SQUARE,
     height: SQUARE,
-    borderRadius: 1,
+    borderRadius: 2,
     marginBottom: GAP,
   },
-  todayRing: { borderWidth: 1.5 },
+  // Blue = activity: today's square is always identifiable.
+  todayRing: { borderWidth: 1.5, borderColor: colors.blue },
   legend: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -141,7 +174,6 @@ const styles = StyleSheet.create({
   legendText: {
     fontFamily: fontFamily.mono,
     fontSize: font.tiny,
-    fontWeight: weight.semibold,
     letterSpacing: tracking.label,
     textTransform: 'uppercase',
     color: colors.textMuted,
@@ -150,7 +182,7 @@ const styles = StyleSheet.create({
   legendBox: {
     width: 12,
     height: 12,
-    borderRadius: 1,
+    borderRadius: 2,
     marginHorizontal: 2,
   },
 });

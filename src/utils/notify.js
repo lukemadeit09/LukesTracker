@@ -3,6 +3,7 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { randomReminder } from './quotes';
 
 // Show alerts even when the app is foregrounded.
 Notifications.setNotificationHandler({
@@ -13,13 +14,6 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-
-const REMINDERS = [
-  'Time to check in. What did you get done today?',
-  "Don't break the chain. Tick off today's habits.",
-  'Discipline now, pride later. Open your tracker.',
-  'A small effort today keeps your streak alive.',
-];
 
 export async function ensurePermission() {
   const settings = await Notifications.getPermissionsAsync();
@@ -46,7 +40,7 @@ export async function scheduleDailyReminder(hour, minute) {
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'Lukes Tracker',
-      body: REMINDERS[Math.floor(Math.random() * REMINDERS.length)],
+      body: randomReminder(),
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,

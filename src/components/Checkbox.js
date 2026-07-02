@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { colors, spacing, font, border } from '../theme';
+import { colors, spacing, font, border, fontFamily } from '../theme';
 
 export default function Checkbox({ label, checked, onToggle, onLongPress }) {
   return (
@@ -47,6 +47,6 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
   },
   check: { color: colors.black, fontSize: 15, fontWeight: '800' },
-  label: { color: colors.textPrimary, fontSize: font.body, flex: 1 },
+  label: { color: colors.textPrimary, fontSize: font.body, flex: 1, fontFamily: fontFamily.sans },
   labelChecked: { color: colors.textMuted, textDecorationLine: 'line-through' },
 });

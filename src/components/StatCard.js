@@ -1,17 +1,26 @@
-// Hairline-outlined stat tile. Value is always mono; label is a small
-// uppercase tracked caption in sans (labels are structural, not data).
+// Stat tile on a card surface. Value in Space Mono (terminal), label as a
+// small tracked mono caption. `tone` may recolor the value when the number
+// itself carries meaning (e.g. greenBright when everything is done).
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radius, font, weight, tracking, fontFamily, border } from '../theme';
+import { colors, spacing, radius, font, tracking, fontFamily, border } from '../theme';
 
-export default function StatCard({ value, label, delta, emphasized }) {
+export default function StatCard({ value, label, delta, emphasized, tone }) {
   return (
     <View
       style={[styles.card, emphasized && styles.emphasized]}
       accessibilityLabel={`${label}, ${value}`}
     >
-      <Text style={[styles.value, emphasized && styles.valueEmphasized]}>{value}</Text>
+      <Text
+        style={[
+          styles.value,
+          emphasized && styles.valueEmphasized,
+          tone && { color: tone },
+        ]}
+      >
+        {value}
+      </Text>
       <Text style={styles.label}>{label}</Text>
       {delta ? <Text style={styles.delta}>{delta}</Text> : null}
     </View>
@@ -21,29 +30,29 @@ export default function StatCard({ value, label, delta, emphasized }) {
 const styles = StyleSheet.create({
   card: {
     flex: 1,
+    backgroundColor: colors.surface,
     borderWidth: border.thin,
     borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderRadius: radius.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     alignItems: 'center',
-    marginLeft: -border.thin,
+    marginLeft: spacing.xs,
   },
   emphasized: {
-    borderColor: colors.borderStrong,
+    borderColor: colors.white,
   },
   value: {
-    fontFamily: fontFamily.mono,
+    fontFamily: fontFamily.monoBold,
     fontSize: font.monoStat,
-    fontWeight: weight.bold,
     color: colors.textPrimary,
   },
   valueEmphasized: {
     fontSize: font.monoStat + 4,
   },
   label: {
-    fontSize: font.tiny,
-    fontWeight: weight.semibold,
+    fontFamily: fontFamily.mono,
+    fontSize: 9,
     letterSpacing: tracking.label,
     textTransform: 'uppercase',
     color: colors.textMuted,

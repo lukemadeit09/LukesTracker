@@ -1,52 +1,30 @@
-// App root: black themed safe area, app state, and a text-first bottom-tab
-// nav between Home, Goals, Stats and Settings.
+// App root: loads fonts, provides state + safe area, renders the active
+// screen behind a floating rounded dock tab bar.
 
-import React, { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  ActivityIndicator,
-  StyleSheet,
-  Animated,
-} from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import {
+  useFonts,
+  SpaceGrotesk_400Regular,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
+import { SpaceMono_400Regular, SpaceMono_700Bold } from '@expo-google-fonts/space-mono';
 import { AppProvider, useApp } from './src/context/AppContext';
 import DashboardScreen from './src/screens/DashboardScreen';
 import GoalsScreen from './src/screens/GoalsScreen';
 import StatsScreen from './src/screens/StatsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import { colors, spacing, font, weight, tracking, fontFamily, border } from './src/theme';
+import { colors, spacing, font, tracking, fontFamily, radius } from './src/theme';
 
 const TABS = [
-  { key: 'home', index: '01', label: 'Home', screen: DashboardScreen },
-  { key: 'goals', index: '02', label: 'Goals', screen: GoalsScreen },
-  { key: 'stats', index: '03', label: 'Stats', screen: StatsScreen },
-  { key: 'settings', index: '04', label: 'Settings', screen: SettingsScreen },
+  { key: 'home', label: 'Home', screen: DashboardScreen },
+  { key: 'goals', label: 'Goals', screen: GoalsScreen },
+  { key: 'stats', label: 'Stats', screen: StatsScreen },
+  { key: 'settings', label: 'Settings', screen: SettingsScreen },
 ];
-
-function LoadingMark() {
-  const pulse = useRef(new Animated.Value(0.2)).current;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.5, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.2, duration: 600, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
-
-  return (
-    <Animated.View style={[styles.loadingMark, { opacity: pulse }]} />
-  );
-}
 
 function Root() {
   const { ready } = useApp();
@@ -56,9 +34,8 @@ function Root() {
   if (!ready) {
     return (
       <View style={styles.loading}>
-        <LoadingMark />
         <ActivityIndicator color={colors.white} size="large" />
-        <Text style={styles.loadingText}>Loading your progress…</Text>
+        <Text style={styles.loadingText}>{'// LOADING YOUR PROGRESS'}</Text>
       </View>
     );
   }
@@ -71,24 +48,45 @@ function Root() {
         <ActiveScreen />
       </View>
 
-      {/* Bottom tab bar — sits flush at the physical bottom of the screen. */}
-      <View style={[styles.tabBar, { paddingBottom: spacing.sm + insets.bottom }]}>
-        {TABS.map((t) => {
-          const focused = t.key === active;
-          return (
-            <Pressable key={t.key} style={styles.tab} onPress={() => setActive(t.key)}>
-              <Text style={[styles.tabIndex, focused && styles.tabIndexActive]}>{t.index}</Text>
-              <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{t.label}</Text>
-              <View style={[styles.tabUnderline, focused && styles.tabUnderlineActive]} />
-            </Pressable>
-          );
-        })}
+      {/* Floating dock */}
+      <View style={[styles.dockWrap, { bottom: Math.max(insets.bottom, spacing.sm) + spacing.sm }]}>
+        <View style={styles.dock}>
+          {TABS.map((t) => {
+            const focused = t.key === active;
+            return (
+              <Pressable
+                key={t.key}
+                style={[styles.dockTab, focused && styles.dockTabActive]}
+                onPress={() => setActive(t.key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: focused }}
+              >
+                <Text style={[styles.dockLabel, focused && styles.dockLabelActive]}>
+                  {t.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    SpaceGrotesk_400Regular,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_700Bold,
+    SpaceMono_400Regular,
+    SpaceMono_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    // Keep the black screen rather than flashing unstyled text.
+    return <View style={styles.safe} />;
+  }
+
   return (
     <AppProvider>
       <SafeAreaProvider>
@@ -109,43 +107,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  loadingMark: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: border.thin,
-    borderColor: colors.white,
-    marginBottom: spacing.md,
-  },
-  loadingText: { color: colors.textMuted, marginTop: spacing.sm, fontSize: font.small },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderTopWidth: border.thin,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xs },
-  tabIndex: {
+  loadingText: {
     fontFamily: fontFamily.mono,
     fontSize: font.tiny,
     letterSpacing: tracking.label,
-    color: colors.gray500,
+    color: colors.textMuted,
+    marginTop: spacing.md,
   },
-  tabIndexActive: { color: colors.white },
-  tabLabel: {
-    fontSize: font.small,
-    fontWeight: weight.semibold,
-    color: colors.gray500,
+  dockWrap: {
+    position: 'absolute',
+    left: spacing.md,
+    right: spacing.md,
+    alignItems: 'center',
+  },
+  dock: {
+    flexDirection: 'row',
+    backgroundColor: colors.dock,
+    borderRadius: radius.dock,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.xs,
+  },
+  dockTab: {
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.dock - spacing.xs,
+  },
+  dockTabActive: {
+    backgroundColor: colors.white,
+  },
+  dockLabel: {
+    fontFamily: fontFamily.mono,
+    fontSize: font.tiny,
+    letterSpacing: tracking.label,
     textTransform: 'uppercase',
-    marginTop: 2,
+    color: colors.textMuted,
   },
-  tabLabelActive: { color: colors.white },
-  tabUnderline: {
-    height: 2,
-    width: 24,
-    marginTop: spacing.xs,
-    backgroundColor: 'transparent',
+  dockLabelActive: {
+    fontFamily: fontFamily.monoBold,
+    color: colors.black,
   },
-  tabUnderlineActive: { backgroundColor: colors.white },
 });

@@ -18,3 +18,34 @@ jest.mock('react-native-safe-area-context', () => {
   const mock = require('react-native-safe-area-context/jest/mock');
   return mock && mock.default ? mock.default : mock;
 });
+
+// Report reduce-motion as ON in tests: FadeRise / ProgressBar / ArtBackdrop /
+// ContributionGrid all skip their Animated timers on that branch, so no
+// animation frame can outlive the Jest environment (dangling-timer crashes).
+// Individual test files can still override this mock locally.
+jest.mock(
+  'react-native/Libraries/Components/AccessibilityInfo/AccessibilityInfo',
+  () => ({
+    __esModule: true,
+    default: {
+      isReduceMotionEnabled: jest.fn(async () => true),
+      isScreenReaderEnabled: jest.fn(async () => false),
+      addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+      announceForAccessibility: jest.fn(),
+    },
+  })
+);
+
+// Fonts never actually load in Jest — App.js gates the whole tree on
+// useFonts(), so mock the font packages to report "loaded" immediately.
+// Family-name constants just need to be defined strings for StyleSheet.
+jest.mock('@expo-google-fonts/space-grotesk', () => ({
+  useFonts: () => [true, null],
+  SpaceGrotesk_400Regular: 'SpaceGrotesk_400Regular',
+  SpaceGrotesk_500Medium: 'SpaceGrotesk_500Medium',
+  SpaceGrotesk_700Bold: 'SpaceGrotesk_700Bold',
+}));
+jest.mock('@expo-google-fonts/space-mono', () => ({
+  SpaceMono_400Regular: 'SpaceMono_400Regular',
+  SpaceMono_700Bold: 'SpaceMono_700Bold',
+}));

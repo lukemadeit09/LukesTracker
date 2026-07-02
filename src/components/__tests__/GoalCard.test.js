@@ -89,30 +89,38 @@ beforeEach(async () => {
 });
 
 describe('GoalCard celebration banner', () => {
-  test('renders the celebration banner text when the goal has a pendingCelebration', async () => {
+  test('renders the celebration panel as three separate text nodes when the goal has a pendingCelebration', async () => {
     await seedState(seededGoal({ current: 25 })); // exactly 25%, not yet celebrated
 
-    const { findByText } = await render(<Harness goalId="goal-1" />);
+    const { findAllByText, findByText } = await render(<Harness goalId="goal-1" />);
 
-    const banner = await findByText('Quarter way — 25% of Read 24 books');
-    expect(banner).toBeTruthy();
+    // The old single-sentence banner ("Quarter way — 25% of Read 24 books")
+    // is now a panel with three separate text nodes: the mono percentage,
+    // the uppercase label, and the goal title. "25%" also appears in the
+    // step-controls row (current pct) and "Read 24 books" also appears in
+    // the card's title row, so we assert presence via findAllByText.
+    await waitFor(async () => {
+      expect(await findAllByText('25%')).toHaveLength(2); // celebration pct + step-controls pct
+    });
+    expect(await findByText('QUARTER WAY')).toBeTruthy(); // uppercase label, unique to the panel
+    expect(await findAllByText('Read 24 books')).toHaveLength(2); // card title + celebration panel title
   });
 
-  test('does not render the banner (shows the normal milestone row instead) when nothing is pending', async () => {
+  test('does not render the celebration panel (shows the normal milestone row instead) when nothing is pending', async () => {
     await seedState(seededGoal({ current: 10 })); // 10% - below any threshold
 
     const { findByText, queryByText } = await render(<Harness goalId="goal-1" />);
 
     await findByText(/Next milestone: 25%/);
-    expect(queryByText(/Quarter way/)).toBeNull();
+    expect(queryByText('QUARTER WAY')).toBeNull();
   });
 
-  test('pressing the dismiss ✕ acknowledges the milestone and the banner disappears', async () => {
+  test('pressing the dismiss ✕ acknowledges the milestone and the panel disappears', async () => {
     await seedState(seededGoal({ current: 25 }));
 
     const { findByText, findByLabelText, queryByText } = await render(<Harness goalId="goal-1" />);
 
-    await findByText('Quarter way — 25% of Read 24 books');
+    await findByText('QUARTER WAY');
 
     const dismissBtn = await findByLabelText('Dismiss milestone celebration');
     await act(async () => {
@@ -120,7 +128,7 @@ describe('GoalCard celebration banner', () => {
     });
 
     await waitFor(() => {
-      expect(queryByText('Quarter way — 25% of Read 24 books')).toBeNull();
+      expect(queryByText('QUARTER WAY')).toBeNull();
     });
 
     // Milestone row should now show the *next* uncelebrated/unreached threshold.

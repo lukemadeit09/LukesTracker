@@ -1,23 +1,23 @@
 // GitHub-style activity grid. Columns = weeks, rows = weekdays.
-// Each square fills with the accent color based on that day's score (0..1).
+// Each square fills with a grayscale step based on that day's score (0..1).
 
 import React, { useMemo, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { colors, spacing, radius, font } from '../theme';
+import { colors, spacing, font, weight, tracking, fontFamily } from '../theme';
 import { dayKey, addDays, todayKey } from '../utils/dates';
 
 const SQUARE = 14;
 const GAP = 3;
 const WEEKS = 18; // ~4 months of history
+const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-// Map a 0..1 score to a fill color. Empty days stay a dim slate;
-// busier days glow brighter orange.
+// Map a 0..1 score to a grayscale fill step.
 function colorForScore(score) {
-  if (score <= 0) return colors.secondary + '55'; // faint slate
-  if (score < 0.34) return colors.accent + '55';
-  if (score < 0.67) return colors.accent + '99';
-  if (score < 1) return colors.accent + 'cc';
-  return colors.accent; // full day
+  if (score <= 0) return colors.gray100; // faint - almost invisible against black, but present
+  if (score < 0.34) return colors.gray400;
+  if (score < 0.67) return colors.gray600;
+  if (score < 1) return colors.gray700;
+  return colors.white; // full day = pure white
 }
 
 export default function ContributionGrid({ scoreFor }) {
@@ -46,44 +46,56 @@ export default function ContributionGrid({ scoreFor }) {
 
   return (
     <View>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        testID="activity-grid-scroll"
-        // Snap to the most recent weeks once the content is measured.
-        // NOTE: do not replace this with a static `contentOffset` — an
-        // out-of-range offset (content width isn't known up front) gets
-        // applied unclamped when the screen remounts on a tab switch,
-        // parking the viewport past the content so the grid looks empty.
-        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
-      >
-        <View style={styles.grid}>
-          {weeks.map((col, ci) => (
-            <View key={ci} style={styles.col}>
-              {col.map((key) => {
-                const future = key > today;
-                const score = future ? 0 : scoreFor(key);
-                return (
-                  <View
-                    key={key}
-                    testID="grid-square"
-                    style={[
-                      styles.square,
-                      {
-                        backgroundColor: future
-                          ? 'transparent'
-                          : colorForScore(score),
-                      },
-                      key === today && styles.todayRing,
-                    ]}
-                  />
-                );
-              })}
-            </View>
+      <View style={styles.gridRow}>
+        {/* Weekday row labels beside the grid. */}
+        <View style={styles.weekdayCol}>
+          {WEEKDAY_LABELS.map((l, i) => (
+            <Text key={i} style={styles.weekdayLabel}>
+              {l}
+            </Text>
           ))}
         </View>
-      </ScrollView>
+
+        <ScrollView
+          ref={scrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          testID="activity-grid-scroll"
+          // Snap to the most recent weeks once the content is measured.
+          // NOTE: do not replace this with a static `contentOffset` — an
+          // out-of-range offset (content width isn't known up front) gets
+          // applied unclamped when the screen remounts on a tab switch,
+          // parking the viewport past the content so the grid looks empty.
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+        >
+          <View style={styles.grid}>
+            {weeks.map((col, ci) => (
+              <View key={ci} style={styles.col}>
+                {col.map((key) => {
+                  const future = key > today;
+                  const score = future ? 0 : scoreFor(key);
+                  const fill = colorForScore(score);
+                  const isToday = key === today;
+                  // A white-on-white ring would be invisible on a full day —
+                  // render the ring as a black gap around the square instead.
+                  const ringColor = fill === colors.white ? colors.black : colors.white;
+                  return (
+                    <View
+                      key={key}
+                      testID="grid-square"
+                      style={[
+                        styles.square,
+                        { backgroundColor: future ? 'transparent' : fill },
+                        isToday && [styles.todayRing, { borderColor: ringColor }],
+                      ]}
+                    />
+                  );
+                })}
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
 
       {/* Legend */}
       <View style={styles.legend}>
@@ -101,25 +113,44 @@ export default function ContributionGrid({ scoreFor }) {
 }
 
 const styles = StyleSheet.create({
+  gridRow: { flexDirection: 'row' },
+  weekdayCol: { justifyContent: 'flex-start', marginRight: spacing.xs },
+  weekdayLabel: {
+    fontFamily: fontFamily.mono,
+    fontSize: 9,
+    color: colors.textMuted,
+    height: SQUARE,
+    marginBottom: GAP,
+    textAlignVertical: 'center',
+    lineHeight: SQUARE,
+  },
   grid: { flexDirection: 'row' },
   col: { marginRight: GAP },
   square: {
     width: SQUARE,
     height: SQUARE,
-    borderRadius: 3,
+    borderRadius: 1,
     marginBottom: GAP,
   },
-  todayRing: { borderWidth: 1.5, borderColor: colors.text },
+  todayRing: { borderWidth: 1.5 },
   legend: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.sm,
   },
-  legendText: { color: colors.muted, fontSize: font.tiny, marginHorizontal: spacing.xs },
+  legendText: {
+    fontFamily: fontFamily.mono,
+    fontSize: font.tiny,
+    fontWeight: weight.semibold,
+    letterSpacing: tracking.label,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
+    marginHorizontal: spacing.xs,
+  },
   legendBox: {
     width: 12,
     height: 12,
-    borderRadius: 3,
+    borderRadius: 1,
     marginHorizontal: 2,
   },
 });

@@ -1,4 +1,5 @@
 // Settings: daily reminder toggle + time, and a reset option.
+// Deliberately the quietest, art-free screen — "#1 REMINDERS" / "#2 DATA".
 
 import React, { useState } from 'react';
 import {
@@ -13,8 +14,19 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useApp } from '../context/AppContext';
-import { colors, spacing, radius, font } from '../theme';
+import {
+  colors,
+  spacing,
+  radius,
+  font,
+  weight,
+  tracking,
+  fontFamily,
+  border,
+} from '../theme';
 import { scheduleDailyReminder, cancelReminders } from '../utils/notify';
+import Card from '../components/Card';
+import SectionHeader from '../components/SectionHeader';
 
 function fmtTime(h, m) {
   const ampm = h >= 12 ? 'PM' : 'AM';
@@ -52,10 +64,14 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <Text style={styles.h1}>Settings</Text>
-      <Text style={styles.sub}>Reminders keep your streak alive.</Text>
+      <View style={styles.masthead}>
+        <Text style={styles.kicker}>{'> SETTINGS'}</Text>
+        <Text style={styles.h1}>Settings</Text>
+        <Text style={styles.sub}>Reminders keep your streak alive.</Text>
+      </View>
 
-      <View style={styles.card}>
+      <SectionHeader index={1} label="REMINDERS" />
+      <Card>
         <View style={styles.rowBetween}>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Daily reminder</Text>
@@ -64,10 +80,12 @@ export default function SettingsScreen() {
           <Switch
             value={reminderEnabled}
             onValueChange={toggleReminder}
-            trackColor={{ false: colors.secondary, true: colors.accent }}
-            thumbColor={colors.text}
+            trackColor={{ false: colors.gray200, true: colors.white }}
+            thumbColor={colors.black}
           />
         </View>
+
+        <View style={styles.divider} />
 
         <Pressable
           style={[styles.timeRow, !reminderEnabled && { opacity: 0.4 }]}
@@ -89,10 +107,12 @@ export default function SettingsScreen() {
             }}
           />
         )}
-      </View>
+      </Card>
 
+      <SectionHeader index={2} label="DATA" />
       <Pressable
         style={styles.resetBtn}
+        accessibilityHint="Permanently deletes all habits, goals, and history"
         onPress={() =>
           Alert.alert('Reset all data?', 'This permanently clears habits, goals and history.', [
             { text: 'Cancel', style: 'cancel' },
@@ -118,30 +138,50 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  h1: { color: colors.text, fontSize: font.h1, fontWeight: '900', letterSpacing: 1 },
-  sub: { color: colors.muted, fontSize: font.small, marginTop: 2, marginBottom: spacing.lg },
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md },
+  masthead: { paddingTop: spacing.sm },
+  kicker: {
+    fontFamily: fontFamily.mono,
+    fontSize: font.tiny,
+    fontWeight: weight.semibold,
+    letterSpacing: tracking.label,
+    color: colors.textMuted,
+  },
+  h1: {
+    fontSize: font.h1,
+    fontWeight: weight.h1,
+    letterSpacing: tracking.h1,
+    color: colors.textPrimary,
+    marginTop: spacing.xs,
+  },
+  sub: { color: colors.textSecondary, fontSize: font.small, marginTop: spacing.xs, marginBottom: spacing.md },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  label: { color: colors.text, fontSize: font.body, fontWeight: '600' },
-  hint: { color: colors.muted, fontSize: font.small, marginTop: 2 },
+  label: { color: colors.textPrimary, fontSize: font.body, fontWeight: weight.semibold },
+  hint: { color: colors.textSecondary, fontSize: font.small, marginTop: 2 },
+  divider: {
+    height: border.hairline,
+    backgroundColor: colors.border,
+    marginVertical: spacing.md,
+  },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.secondary + '55',
   },
-  time: { color: colors.accent, fontSize: font.body, fontWeight: '800' },
+  time: { fontFamily: fontFamily.mono, color: colors.textPrimary, fontSize: font.monoSmall, fontWeight: '700' },
   resetBtn: {
     marginTop: spacing.xl,
-    borderWidth: 1,
-    borderColor: '#e25c5c88',
-    borderRadius: radius.md,
+    borderWidth: border.thin,
+    borderColor: colors.borderStrong,
+    borderRadius: radius.sm,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  resetText: { color: '#e25c5c', fontWeight: '700' },
-  footer: { color: colors.muted, fontSize: font.tiny, textAlign: 'center', marginTop: spacing.xl },
+  resetText: { color: colors.textPrimary, fontWeight: weight.bold },
+  footer: {
+    fontFamily: fontFamily.mono,
+    fontSize: font.tiny,
+    color: colors.textDisabled,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+  },
 });

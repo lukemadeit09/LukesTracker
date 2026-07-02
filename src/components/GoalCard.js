@@ -1,21 +1,33 @@
 // One goal: title, deadline, progress bar with milestone ticks, a pace-based
-// prediction, quick +/- controls, milestone celebration banner, and a
+// prediction, quick +/- controls, milestone celebration panel, and a
 // per-goal milestone notification toggle.
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, Switch, StyleSheet, AccessibilityInfo } from 'react-native';
-import { colors, spacing, radius, font } from '../theme';
-import { predictGoal, statusColor } from '../utils/predict';
+import { View, Text, Pressable, Switch, StyleSheet, AccessibilityInfo, Animated } from 'react-native';
+import Card from './Card';
+import {
+  colors,
+  spacing,
+  radius,
+  font,
+  weight,
+  tracking,
+  fontFamily,
+  border,
+} from '../theme';
+import { predictGoal } from '../utils/predict';
 import { daysUntil } from '../utils/dates';
 import { getMilestoneStatus } from '../utils/milestones';
 import { useApp } from '../context/AppContext';
 
-// Copy shown in the celebration banner, keyed by threshold percent.
-const CELEBRATION_COPY = {
-  25: (title) => `Quarter way — 25% of ${title}`,
-  50: (title) => `Halfway there — 50% of ${title}`,
-  75: (title) => `Almost there — 75% of ${title}`,
-  100: (title) => `Goal complete — ${title} 🎯`,
+// Uppercase label shown in the celebration panel, keyed by threshold percent.
+// NOTE: this is presentation-only — the milestone row's own copy
+// ("Next milestone: …", "Goal complete — every milestone hit") is unchanged.
+const CELEBRATION_LABEL = {
+  25: 'QUARTER WAY',
+  50: 'HALFWAY',
+  75: 'ALMOST THERE',
+  100: 'GOAL COMPLETE',
 };
 
 const AUTO_DISMISS_MS = 6000;
@@ -24,7 +36,7 @@ export default function GoalCard({ goal, onChange, onRemove }) {
   const { state, acknowledgeMilestone, setGoalMilestoneNotify } = useApp();
   const pred = predictGoal(goal);
   const pct = Math.round(pred.percent * 100);
-  const sColor = statusColor(pred.status, colors);
+  const emphasize = pred.status === 'behind' || pred.status === 'overdue';
 
   const milestones = getMilestoneStatus(goal);
   const { pendingCelebration, next } = milestones;
@@ -33,16 +45,17 @@ export default function GoalCard({ goal, onChange, onRemove }) {
   const step = goal.target >= 40 ? Math.max(1, Math.round(goal.target * 0.05)) : 1;
 
   const dLeft = goal.deadline ? daysUntil(goal.deadline) : null;
+  const overdue = dLeft !== null && dLeft < 0;
   const deadlineText =
     dLeft === null
       ? 'No deadline'
       : dLeft < 0
-      ? `${Math.abs(dLeft)}d overdue`
+      ? `!${Math.abs(dLeft)}d overdue`
       : dLeft === 0
       ? 'Due today'
       : `${dLeft}d left`;
 
-  // Auto-dismiss the celebration banner after AUTO_DISMISS_MS, unless a
+  // Auto-dismiss the celebration panel after AUTO_DISMISS_MS, unless a
   // screen reader is active (that timer could cut off the announcement
   // before the user has time to act on it).
   const timerRef = useRef(null);
@@ -74,13 +87,25 @@ export default function GoalCard({ goal, onChange, onRemove }) {
     acknowledgeMilestone(goal.id, pendingCelebration);
   }
 
+  // Panel entrance: quick opacity + scale-in.
+  const panelAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (pendingCelebration == null) return;
+    panelAnim.setValue(0);
+    Animated.timing(panelAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [pendingCelebration, panelAnim]);
+
   // Milestone row copy, or null when there's nothing to show (no target,
   // or every threshold already celebrated).
   const allCelebrated =
     goal.target > 0 && [25, 50, 75, 100].every((t) => milestones.celebrated.includes(t));
 
   return (
-    <View style={styles.card}>
+    <Card style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.title} numberOfLines={1}>{goal.title}</Text>
         <Pressable onPress={onRemove} hitSlop={10}>
@@ -94,7 +119,15 @@ export default function GoalCard({ goal, onChange, onRemove }) {
           {goal.target ? ` / ${goal.target}` : ''}
           {goal.unit ? ` ${goal.unit}` : ''}
         </Text>
-        <Text style={[styles.meta, { color: colors.muted }]}>{deadlineText}</Text>
+        <Text
+          style={[
+            styles.meta,
+            styles.metaRight,
+            overdue && styles.metaOverdue,
+          ]}
+        >
+          {deadlineText}
+        </Text>
       </View>
 
       {/* Progress bar with milestone ticks at 25/50/75% */}
@@ -123,21 +156,38 @@ export default function GoalCard({ goal, onChange, onRemove }) {
           })}
       </View>
 
-      {/* Milestone row / celebration banner */}
+      {/* Milestone row / celebration panel */}
       {pendingCelebration != null ? (
-        <View style={styles.celebration} accessibilityRole="alert">
-          <Text style={styles.celebrationCheck}>✓</Text>
-          <Text style={styles.celebrationText} numberOfLines={1}>
-            {CELEBRATION_COPY[pendingCelebration](goal.title)}
-          </Text>
+        <Animated.View
+          style={[
+            styles.celebration,
+            {
+              opacity: panelAnim,
+              transform: [
+                {
+                  scale: panelAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.96, 1],
+                  }),
+                },
+              ],
+            },
+          ]}
+          accessibilityRole="alert"
+        >
+          <Text style={styles.celebrationPct}>{pendingCelebration}%</Text>
+          <View style={styles.celebrationRule} />
+          <Text style={styles.celebrationLabel}>{CELEBRATION_LABEL[pendingCelebration]}</Text>
+          <Text style={styles.celebrationTitle} numberOfLines={1}>{goal.title}</Text>
           <Pressable
             onPress={dismissCelebration}
             hitSlop={12}
             accessibilityLabel="Dismiss milestone celebration"
+            style={styles.celebrationDismissWrap}
           >
             <Text style={styles.celebrationDismiss}>✕</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       ) : allCelebrated ? (
         <Text style={styles.milestoneRow}>Goal complete — every milestone hit</Text>
       ) : goal.target > 0 && next ? (
@@ -147,7 +197,13 @@ export default function GoalCard({ goal, onChange, onRemove }) {
       ) : null}
 
       {/* Prediction */}
-      <Text style={[styles.predict, { color: sColor }]}>{pred.label}</Text>
+      <Text style={styles.predictRow}>
+        <Text style={styles.predictPrompt}>{'> '}</Text>
+        <Text style={[styles.predict, emphasize && styles.predictEmphasize]}>
+          {emphasize ? '!' : ''}
+          {pred.label}
+        </Text>
+      </Text>
 
       {/* Progress controls */}
       <View style={styles.controls}>
@@ -159,7 +215,7 @@ export default function GoalCard({ goal, onChange, onRemove }) {
         </Pressable>
         <Text style={styles.pctText}>{pct}%</Text>
         <Pressable
-          style={[styles.stepBtn, styles.stepBtnPlus]}
+          style={styles.stepBtn}
           onPress={() => onChange(goal.current + step)}
         >
           <Text style={styles.stepText}>+{step}</Text>
@@ -175,8 +231,8 @@ export default function GoalCard({ goal, onChange, onRemove }) {
               <Switch
                 value={!!goal.milestoneNotifyEnabled}
                 onValueChange={(v) => setGoalMilestoneNotify(goal.id, v)}
-                trackColor={{ false: colors.secondary, true: colors.accent }}
-                thumbColor={colors.text}
+                trackColor={{ false: colors.gray200, true: colors.white }}
+                thumbColor={colors.black}
                 accessibilityLabel={`Notify on milestones for ${goal.title}`}
                 accessibilityHint={
                   state.settings.reminderEnabled
@@ -193,30 +249,40 @@ export default function GoalCard({ goal, onChange, onRemove }) {
           </View>
         </View>
       )}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
     marginBottom: spacing.md,
   },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { color: colors.text, fontSize: font.h2, fontWeight: '700', flex: 1, marginRight: spacing.sm },
-  remove: { color: colors.muted, fontSize: 16, fontWeight: '700' },
+  title: {
+    color: colors.textPrimary,
+    fontSize: font.h2,
+    fontWeight: weight.h2,
+    letterSpacing: tracking.h2,
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  remove: { color: colors.textMuted, fontSize: 14, fontWeight: '700' },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 2, marginBottom: spacing.sm },
-  meta: { color: colors.text, fontSize: font.small },
+  meta: {
+    fontFamily: fontFamily.mono,
+    fontSize: font.monoSmall,
+    color: colors.textPrimary,
+  },
+  metaRight: { color: colors.textSecondary },
+  metaOverdue: { color: colors.textPrimary, fontWeight: weight.bold },
   track: {
-    height: 10,
-    backgroundColor: colors.secondary + '55',
+    height: 8,
+    backgroundColor: colors.gray100,
     borderRadius: radius.pill,
     overflow: 'visible',
     position: 'relative',
   },
-  fill: { height: '100%', backgroundColor: colors.accent, borderRadius: radius.pill },
+  fill: { height: '100%', backgroundColor: colors.white, borderRadius: radius.pill },
   tick: {
     position: 'absolute',
     top: 0,
@@ -224,50 +290,71 @@ const styles = StyleSheet.create({
     height: '100%',
     marginLeft: -1,
   },
-  tickReached: { backgroundColor: colors.background + 'aa' },
+  tickReached: { backgroundColor: colors.gray600 },
   tickNext: {
-    backgroundColor: colors.text,
+    backgroundColor: colors.textPrimary,
     top: -3,
-    height: 16, // track height (10) + 3px overflow top/bottom
+    height: 14, // track height (8) + 3px overflow top/bottom
   },
-  tickFuture: { backgroundColor: colors.muted + '66' },
+  tickFuture: { backgroundColor: colors.gray300 },
   milestoneRow: {
+    fontFamily: fontFamily.mono,
     fontSize: font.small,
-    color: colors.muted,
-    fontWeight: '600',
-    marginTop: spacing.xs,
+    color: colors.textMuted,
+    marginTop: spacing.sm,
   },
   celebration: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.accent + '1a',
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.accent + '55',
-    paddingVertical: spacing.sm,
+    backgroundColor: colors.surfaceRaised,
+    borderRadius: radius.md,
+    paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
-    marginTop: spacing.xs,
+    marginTop: spacing.sm,
     marginBottom: spacing.xs,
+    alignItems: 'center',
   },
-  celebrationCheck: {
-    color: colors.accent,
-    fontSize: font.body,
+  celebrationPct: {
+    fontFamily: fontFamily.mono,
+    fontSize: 48,
     fontWeight: '800',
-    marginRight: spacing.sm,
+    color: colors.white,
   },
-  celebrationText: {
-    flex: 1,
-    color: colors.text,
-    fontWeight: '700',
-    fontSize: font.small,
+  celebrationRule: {
+    width: 40,
+    height: border.thin,
+    backgroundColor: colors.borderStrong,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  celebrationLabel: {
+    fontSize: font.tiny,
+    fontWeight: weight.semibold,
+    letterSpacing: tracking.label,
+    textTransform: 'uppercase',
+    color: colors.textPrimary,
+  },
+  celebrationTitle: {
+    fontSize: font.body,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  celebrationDismissWrap: {
+    position: 'absolute',
+    bottom: spacing.sm,
+    right: spacing.sm,
   },
   celebrationDismiss: {
-    color: colors.muted,
+    color: colors.textMuted,
     fontSize: 16,
     fontWeight: '700',
-    marginLeft: spacing.sm,
   },
-  predict: { fontSize: font.small, marginTop: spacing.sm, fontWeight: '600' },
+  predictRow: { marginTop: spacing.sm },
+  predictPrompt: {
+    fontFamily: fontFamily.mono,
+    fontSize: font.small,
+    color: colors.textMuted,
+  },
+  predict: { fontSize: font.small, color: colors.textSecondary },
+  predictEmphasize: { color: colors.textPrimary, fontWeight: weight.bold },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -277,17 +364,27 @@ const styles = StyleSheet.create({
   stepBtn: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.secondary,
+    borderWidth: border.thin,
+    borderColor: colors.border,
     borderRadius: radius.sm,
   },
-  stepBtnPlus: { backgroundColor: colors.accent },
-  stepText: { color: colors.text, fontWeight: '800', fontSize: font.body },
-  pctText: { color: colors.muted, fontSize: font.body, fontWeight: '700' },
+  stepText: {
+    fontFamily: fontFamily.mono,
+    color: colors.textPrimary,
+    fontWeight: '700',
+    fontSize: font.body,
+  },
+  pctText: {
+    fontFamily: fontFamily.mono,
+    color: colors.textPrimary,
+    fontSize: font.h2,
+    fontWeight: '700',
+  },
   notifyRow: {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.secondary + '55',
+    borderTopWidth: border.hairline,
+    borderTopColor: colors.border,
   },
   notifyTextWrap: { flex: 1 },
   notifyLabelRow: {
@@ -295,6 +392,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  notifyLabel: { color: colors.text, fontSize: font.small, fontWeight: '600' },
-  notifyHint: { color: colors.muted, fontSize: font.tiny, marginTop: spacing.xs },
+  notifyLabel: { color: colors.textPrimary, fontSize: font.small, fontWeight: weight.semibold },
+  notifyHint: { color: colors.textMuted, fontSize: font.tiny, marginTop: spacing.xs },
 });

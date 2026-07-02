@@ -6,6 +6,8 @@ import { loadState, saveState, emptyState } from '../storage';
 import { todayKey, lastNDays } from '../utils/dates';
 import { getMilestoneStatus } from '../utils/milestones';
 import { sendMilestoneNotification } from '../utils/notify';
+import { longestStreak as computeLongestStreak } from '../utils/streaks';
+import { weekdayHeat as computeWeekdayHeat } from '../utils/heat';
 
 const AppContext = createContext(null);
 
@@ -198,6 +200,20 @@ export function AppProvider({ children }) {
     return streak;
   }
 
+  // Longest streak ever (not just the one ending today): consecutive days,
+  // anywhere in history, with at least one task done. Pure derivation over
+  // state.completions — see src/utils/streaks.js for the walk itself.
+  function longestStreak() {
+    return computeLongestStreak(state.completions, state.tasks);
+  }
+
+  // Completion rate per weekday (Sun..Sat) over a recent rolling window
+  // (default 90 days), independent of the Trend chart's 14-day window.
+  // See src/utils/heat.js for the pure computation.
+  function weekdayHeat(windowDays) {
+    return computeWeekdayHeat(state.tasks, state.completions, windowDays);
+  }
+
   const value = {
     ready,
     state,
@@ -218,6 +234,8 @@ export function AppProvider({ children }) {
     // derived
     dayScore,
     currentStreak,
+    longestStreak,
+    weekdayHeat,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

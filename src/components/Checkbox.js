@@ -1,14 +1,17 @@
-// A single tickable daily task row.
+// A single tickable daily task row — a hairline-bottom list item meant to
+// live inside a single outlined Card, not its own bordered box.
 
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { colors, spacing, radius, font } from '../theme';
+import { colors, spacing, font, border } from '../theme';
 
 export default function Checkbox({ label, checked, onToggle, onLongPress }) {
   return (
     <Pressable
       onPress={onToggle}
       onLongPress={onLongPress}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
       <View style={[styles.box, checked && styles.boxChecked]}>
@@ -25,26 +28,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    marginBottom: spacing.sm,
+    borderBottomWidth: border.hairline,
+    borderBottomColor: colors.border,
+    minHeight: 48,
   },
-  pressed: { opacity: 0.7 },
+  pressed: { opacity: 0.6 },
   box: {
-    width: 26,
-    height: 26,
-    borderRadius: radius.sm,
-    borderWidth: 2,
-    borderColor: colors.muted,
+    width: 22,
+    height: 22,
+    borderWidth: border.thick,
+    borderColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
   boxChecked: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.white,
+    borderColor: colors.white,
   },
-  check: { color: colors.text, fontSize: 16, fontWeight: '800' },
-  label: { color: colors.text, fontSize: font.body, flex: 1 },
-  labelChecked: { color: colors.muted, textDecorationLine: 'line-through' },
+  check: { color: colors.black, fontSize: 15, fontWeight: '800' },
+  label: { color: colors.textPrimary, fontSize: font.body, flex: 1 },
+  labelChecked: { color: colors.textMuted, textDecorationLine: 'line-through' },
 });

@@ -36,7 +36,9 @@ export default function GoalCard({ goal, onChange, onRemove }) {
   const { state, acknowledgeMilestone, setGoalMilestoneNotify } = useApp();
   const pred = predictGoal(goal);
   const pct = Math.round(pred.percent * 100);
-  const emphasize = pred.status === 'behind' || pred.status === 'overdue';
+  // Meaning accents: red = urgent/behind, green = done/on track (small text).
+  const urgent = pred.status === 'behind' || pred.status === 'overdue';
+  const onTrack = pred.status === 'ontrack' || pred.status === 'done';
 
   const milestones = getMilestoneStatus(goal);
   const { pendingCelebration, next } = milestones;
@@ -90,13 +92,15 @@ export default function GoalCard({ goal, onChange, onRemove }) {
   // Panel entrance: quick opacity + scale-in.
   const panelAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (pendingCelebration == null) return;
+    if (pendingCelebration == null) return undefined;
     panelAnim.setValue(0);
-    Animated.timing(panelAnim, {
+    const anim = Animated.timing(panelAnim, {
       toValue: 1,
       duration: 200,
       useNativeDriver: true,
-    }).start();
+    });
+    anim.start();
+    return () => anim.stop();
   }, [pendingCelebration, panelAnim]);
 
   // Milestone row copy, or null when there's nothing to show (no target,
@@ -119,15 +123,13 @@ export default function GoalCard({ goal, onChange, onRemove }) {
           {goal.target ? ` / ${goal.target}` : ''}
           {goal.unit ? ` ${goal.unit}` : ''}
         </Text>
-        <Text
-          style={[
-            styles.meta,
-            styles.metaRight,
-            overdue && styles.metaOverdue,
-          ]}
-        >
-          {deadlineText}
-        </Text>
+        {overdue ? (
+          <View style={styles.overdueChip}>
+            <Text style={styles.overdueChipText}>{deadlineText}</Text>
+          </View>
+        ) : (
+          <Text style={[styles.meta, styles.metaRight]}>{deadlineText}</Text>
+        )}
       </View>
 
       {/* Progress bar with milestone ticks at 25/50/75% */}
@@ -196,11 +198,19 @@ export default function GoalCard({ goal, onChange, onRemove }) {
         </Text>
       ) : null}
 
-      {/* Prediction */}
+      {/* Prediction: red prompt when urgent, bright green text when on track */}
       <Text style={styles.predictRow}>
-        <Text style={styles.predictPrompt}>{'> '}</Text>
-        <Text style={[styles.predict, emphasize && styles.predictEmphasize]}>
-          {emphasize ? '!' : ''}
+        <Text style={[styles.predictPrompt, urgent && styles.predictPromptUrgent]}>
+          {'> '}
+        </Text>
+        <Text
+          style={[
+            styles.predict,
+            urgent && styles.predictUrgent,
+            onTrack && styles.predictOnTrack,
+          ]}
+        >
+          {urgent ? '!' : ''}
           {pred.label}
         </Text>
       </Text>
@@ -259,10 +269,11 @@ const styles = StyleSheet.create({
   },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: {
+    fontFamily: fontFamily.display,
     color: colors.textPrimary,
     fontSize: font.h2,
-    fontWeight: weight.h2,
     letterSpacing: tracking.h2,
+    textTransform: 'uppercase',
     flex: 1,
     marginRight: spacing.sm,
   },
@@ -274,7 +285,18 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   metaRight: { color: colors.textSecondary },
-  metaOverdue: { color: colors.textPrimary, fontWeight: weight.bold },
+  // Red = urgent: overdue deadline gets a filled blood-red chip.
+  overdueChip: {
+    backgroundColor: colors.red,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
+  overdueChipText: {
+    fontFamily: fontFamily.monoBold,
+    fontSize: font.monoSmall,
+    color: colors.white,
+  },
   track: {
     height: 8,
     backgroundColor: colors.gray100,
@@ -304,7 +326,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   celebration: {
-    backgroundColor: colors.surfaceRaised,
+    // Green = done: the one filled accent surface in the app.
+    backgroundColor: colors.green,
     borderRadius: radius.md,
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
@@ -313,26 +336,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   celebrationPct: {
-    fontFamily: fontFamily.mono,
+    fontFamily: fontFamily.monoBold,
     fontSize: 48,
-    fontWeight: '800',
     color: colors.white,
   },
   celebrationRule: {
     width: 40,
     height: border.thin,
-    backgroundColor: colors.borderStrong,
+    backgroundColor: colors.greenBright + '55',
     marginTop: spacing.sm,
     marginBottom: spacing.sm,
   },
   celebrationLabel: {
+    fontFamily: fontFamily.mono,
     fontSize: font.tiny,
-    fontWeight: weight.semibold,
     letterSpacing: tracking.label,
     textTransform: 'uppercase',
-    color: colors.textPrimary,
+    color: colors.greenBright,
   },
   celebrationTitle: {
+    fontFamily: fontFamily.sans,
     fontSize: font.body,
     color: colors.textSecondary,
     marginTop: spacing.xs,
@@ -353,8 +376,10 @@ const styles = StyleSheet.create({
     fontSize: font.small,
     color: colors.textMuted,
   },
-  predict: { fontSize: font.small, color: colors.textSecondary },
-  predictEmphasize: { color: colors.textPrimary, fontWeight: weight.bold },
+  predictPromptUrgent: { color: colors.red },
+  predict: { fontFamily: fontFamily.sans, fontSize: font.small, color: colors.textSecondary },
+  predictUrgent: { color: colors.textPrimary },
+  predictOnTrack: { color: colors.greenBright },
   controls: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -369,16 +394,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   stepText: {
-    fontFamily: fontFamily.mono,
+    fontFamily: fontFamily.monoBold,
     color: colors.textPrimary,
-    fontWeight: '700',
     fontSize: font.body,
   },
   pctText: {
-    fontFamily: fontFamily.mono,
+    fontFamily: fontFamily.monoBold,
     color: colors.textPrimary,
     fontSize: font.h2,
-    fontWeight: '700',
   },
   notifyRow: {
     marginTop: spacing.sm,
@@ -392,6 +415,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  notifyLabel: { color: colors.textPrimary, fontSize: font.small, fontWeight: weight.semibold },
-  notifyHint: { color: colors.textMuted, fontSize: font.tiny, marginTop: spacing.xs },
+  notifyLabel: {
+    fontFamily: fontFamily.sans,
+    color: colors.textPrimary,
+    fontSize: font.small,
+  },
+  notifyHint: {
+    fontFamily: fontFamily.sans,
+    color: colors.textMuted,
+    fontSize: font.tiny,
+    marginTop: spacing.xs,
+  },
 });

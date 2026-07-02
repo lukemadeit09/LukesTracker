@@ -1,5 +1,6 @@
-// Settings: daily reminder toggle + time, and a reset option.
-// Deliberately the quietest, art-free screen — "#1 REMINDERS" / "#2 DATA".
+// Settings: daily reminder toggle + time, and a reset option, over the Doré
+// engraving — the quietest screen. Sections: // 01 REMINDERS  // 02 DATA
+// Accent budget: red only (destructive reset).
 
 import React, { useState } from 'react';
 import {
@@ -14,19 +15,12 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useApp } from '../context/AppContext';
-import {
-  colors,
-  spacing,
-  radius,
-  font,
-  weight,
-  tracking,
-  fontFamily,
-  border,
-} from '../theme';
+import { colors, spacing, radius, font, tracking, fontFamily, border } from '../theme';
 import { scheduleDailyReminder, cancelReminders } from '../utils/notify';
 import Card from '../components/Card';
 import SectionHeader from '../components/SectionHeader';
+import FadeRise from '../components/FadeRise';
+import ArtBackdrop from '../components/art/ArtBackdrop';
 
 function fmtTime(h, m) {
   const ampm = h >= 12 ? 'PM' : 'AM';
@@ -63,100 +57,117 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-      <View style={styles.masthead}>
-        <Text style={styles.kicker}>{'> SETTINGS'}</Text>
-        <Text style={styles.h1}>Settings</Text>
-        <Text style={styles.sub}>Reminders keep your streak alive.</Text>
-      </View>
+    <View style={styles.screen}>
+      <ArtBackdrop source="dore" />
 
-      <SectionHeader index={1} label="REMINDERS" />
-      <Card>
-        <View style={styles.rowBetween}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.label}>Daily reminder</Text>
-            <Text style={styles.hint}>A nudge to check in every day</Text>
-          </View>
-          <Switch
-            value={reminderEnabled}
-            onValueChange={toggleReminder}
-            trackColor={{ false: colors.gray200, true: colors.white }}
-            thumbColor={colors.black}
-          />
-        </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <FadeRise order={0}>
+          <Text style={styles.kicker}>{'// LUKES TRACKER'}</Text>
+          <Text style={styles.masthead}>SETTINGS</Text>
+          <Text style={styles.sub}>Reminders keep your streak alive.</Text>
+        </FadeRise>
 
-        <View style={styles.divider} />
+        {/* // 01 REMINDERS */}
+        <FadeRise order={1}>
+          <SectionHeader index={1} label="REMINDERS" />
+          <Card style={styles.panel}>
+            <View style={styles.rowBetween}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.label}>Daily reminder</Text>
+                <Text style={styles.hint}>A nudge to check in every day</Text>
+              </View>
+              <Switch
+                value={reminderEnabled}
+                onValueChange={toggleReminder}
+                trackColor={{ false: colors.gray200, true: colors.white }}
+                thumbColor={colors.black}
+              />
+            </View>
 
-        <Pressable
-          style={[styles.timeRow, !reminderEnabled && { opacity: 0.4 }]}
-          disabled={!reminderEnabled}
-          onPress={() => setShowPicker(true)}
-        >
-          <Text style={styles.label}>Reminder time</Text>
-          <Text style={styles.time}>{fmtTime(reminderHour, reminderMinute)}</Text>
-        </Pressable>
+            <View style={styles.divider} />
 
-        {showPicker && (
-          <DateTimePicker
-            value={new Date(2020, 0, 1, reminderHour, reminderMinute)}
-            mode="time"
-            themeVariant="dark"
-            onChange={(event, selected) => {
-              setShowPicker(Platform.OS === 'ios');
-              if (event.type !== 'dismissed' && selected) changeTime(selected);
-            }}
-          />
-        )}
-      </Card>
+            <Pressable
+              style={[styles.timeRow, !reminderEnabled && { opacity: 0.4 }]}
+              disabled={!reminderEnabled}
+              onPress={() => setShowPicker(true)}
+            >
+              <Text style={styles.label}>Reminder time</Text>
+              <Text style={styles.time}>{fmtTime(reminderHour, reminderMinute)}</Text>
+            </Pressable>
 
-      <SectionHeader index={2} label="DATA" />
-      <Pressable
-        style={styles.resetBtn}
-        accessibilityHint="Permanently deletes all habits, goals, and history"
-        onPress={() =>
-          Alert.alert('Reset all data?', 'This permanently clears habits, goals and history.', [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Reset',
-              style: 'destructive',
-              onPress: () => {
-                cancelReminders();
-                resetAll();
-              },
-            },
-          ])
-        }
-      >
-        <Text style={styles.resetText}>Reset all data</Text>
-      </Pressable>
+            {showPicker && (
+              <DateTimePicker
+                value={new Date(2020, 0, 1, reminderHour, reminderMinute)}
+                mode="time"
+                themeVariant="dark"
+                onChange={(event, selected) => {
+                  setShowPicker(Platform.OS === 'ios');
+                  if (event.type !== 'dismissed' && selected) changeTime(selected);
+                }}
+              />
+            )}
+          </Card>
+        </FadeRise>
 
-      <Text style={styles.footer}>Lukes Tracker · all data stays on your device</Text>
-    </ScrollView>
+        {/* // 02 DATA */}
+        <FadeRise order={2}>
+          <SectionHeader index={2} label="DATA" />
+          <Pressable
+            style={styles.resetBtn}
+            accessibilityHint="Permanently deletes all habits, goals, and history"
+            onPress={() =>
+              Alert.alert('Reset all data?', 'This permanently clears habits, goals and history.', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Reset',
+                  style: 'destructive',
+                  onPress: () => {
+                    cancelReminders();
+                    resetAll();
+                  },
+                },
+              ])
+            }
+          >
+            <Text style={styles.resetText}>RESET ALL DATA</Text>
+          </Pressable>
+
+          <Text style={styles.footer}>
+            {'// LUKES TRACKER — ALL DATA STAYS ON YOUR DEVICE'}
+          </Text>
+        </FadeRise>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  masthead: { paddingTop: spacing.sm },
+  content: { padding: spacing.md, paddingBottom: 120 },
   kicker: {
     fontFamily: fontFamily.mono,
     fontSize: font.tiny,
-    fontWeight: weight.semibold,
     letterSpacing: tracking.label,
     color: colors.textMuted,
+    marginTop: spacing.sm,
   },
-  h1: {
-    fontSize: font.h1,
-    fontWeight: weight.h1,
-    letterSpacing: tracking.h1,
+  masthead: {
+    fontFamily: fontFamily.display,
+    fontSize: font.display,
+    letterSpacing: tracking.display,
     color: colors.textPrimary,
     marginTop: spacing.xs,
   },
-  sub: { color: colors.textSecondary, fontSize: font.small, marginTop: spacing.xs, marginBottom: spacing.md },
+  sub: {
+    fontFamily: fontFamily.sans,
+    color: colors.textSecondary,
+    fontSize: font.small,
+    marginTop: spacing.xs,
+  },
+  panel: { marginTop: spacing.md },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  label: { color: colors.textPrimary, fontSize: font.body, fontWeight: weight.semibold },
-  hint: { color: colors.textSecondary, fontSize: font.small, marginTop: 2 },
+  label: { fontFamily: fontFamily.sans, color: colors.textPrimary, fontSize: font.body },
+  hint: { fontFamily: fontFamily.sans, color: colors.textSecondary, fontSize: font.small, marginTop: 2 },
   divider: {
     height: border.hairline,
     backgroundColor: colors.border,
@@ -167,19 +178,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  time: { fontFamily: fontFamily.mono, color: colors.textPrimary, fontSize: font.monoSmall, fontWeight: '700' },
+  time: { fontFamily: fontFamily.monoBold, color: colors.textPrimary, fontSize: font.monoSmall },
+  // Red = urgent: the only accent on this screen, for the destructive action.
   resetBtn: {
-    marginTop: spacing.xl,
+    marginTop: spacing.md,
     borderWidth: border.thin,
-    borderColor: colors.borderStrong,
-    borderRadius: radius.sm,
+    borderColor: colors.red,
+    borderRadius: radius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    backgroundColor: colors.surface,
   },
-  resetText: { color: colors.textPrimary, fontWeight: weight.bold },
+  resetText: {
+    fontFamily: fontFamily.monoBold,
+    fontSize: font.monoSmall,
+    letterSpacing: tracking.label,
+    color: colors.white,
+  },
   footer: {
     fontFamily: fontFamily.mono,
-    fontSize: font.tiny,
+    fontSize: 9,
+    letterSpacing: tracking.label,
     color: colors.textDisabled,
     textAlign: 'center',
     marginTop: spacing.xl,

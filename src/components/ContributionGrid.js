@@ -1,7 +1,7 @@
 // GitHub-style activity grid. Columns = weeks, rows = weekdays.
 // Each square fills with the accent color based on that day's score (0..1).
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { colors, spacing, radius, font } from '../theme';
 import { dayKey, addDays, todayKey } from '../utils/dates';
@@ -22,6 +22,7 @@ function colorForScore(score) {
 
 export default function ContributionGrid({ scoreFor }) {
   const today = todayKey();
+  const scrollRef = useRef(null);
 
   // Build columns of 7 days each, aligned so each column starts on Sunday.
   const weeks = useMemo(() => {
@@ -46,10 +47,16 @@ export default function ContributionGrid({ scoreFor }) {
   return (
     <View>
       <ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        // Start scrolled to the most recent weeks.
-        contentOffset={{ x: 9999, y: 0 }}
+        testID="activity-grid-scroll"
+        // Snap to the most recent weeks once the content is measured.
+        // NOTE: do not replace this with a static `contentOffset` — an
+        // out-of-range offset (content width isn't known up front) gets
+        // applied unclamped when the screen remounts on a tab switch,
+        // parking the viewport past the content so the grid looks empty.
+        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
       >
         <View style={styles.grid}>
           {weeks.map((col, ci) => (
@@ -60,6 +67,7 @@ export default function ContributionGrid({ scoreFor }) {
                 return (
                   <View
                     key={key}
+                    testID="grid-square"
                     style={[
                       styles.square,
                       {

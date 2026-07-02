@@ -1,7 +1,6 @@
 // Settings — the most polished screen: grouped section cards led by colored
 // icon tiles (the one sanctioned decorative use of color — 28px chips, not
 // surfaces), over the blue Flammarion riso at higher prominence (15-18%).
-// Sections: // 01 REMINDERS  // 02 APPEARANCE  // 03 DATA  // 04 DANGER ZONE
 
 import React, { useState } from 'react';
 import {
@@ -20,7 +19,6 @@ import Constants from 'expo-constants';
 import { useApp } from '../context/AppContext';
 import { colors, spacing, radius, font, tracking, fontFamily, border } from '../theme';
 import { scheduleDailyReminder, cancelReminders } from '../utils/notify';
-import SectionHeader from '../components/SectionHeader';
 import IconTile from '../components/IconTile';
 import FadeRise from '../components/FadeRise';
 import ArtBackdrop from '../components/art/ArtBackdrop';
@@ -131,9 +129,8 @@ export default function SettingsScreen() {
           <Text style={styles.sub}>Reminders keep your streak alive.</Text>
         </FadeRise>
 
-        {/* // 01 REMINDERS */}
+        {/* Reminders */}
         <FadeRise order={1}>
-          <SectionHeader index={1} label="REMINDERS" />
           <Section icon="bell" color={colors.blue} title="Reminders">
             <Row
               label="Daily reminder"
@@ -163,9 +160,8 @@ export default function SettingsScreen() {
           </Section>
         </FadeRise>
 
-        {/* // 02 APPEARANCE */}
+        {/* Appearance */}
         <FadeRise order={2}>
-          <SectionHeader index={2} label="APPEARANCE" />
           <Section icon="palette" color={colors.purple} title="Appearance">
             <Row label="Theme" right={<Text style={styles.rowValue}>BLACK & WHITE</Text>} />
             <Row
@@ -183,9 +179,8 @@ export default function SettingsScreen() {
           </Section>
         </FadeRise>
 
-        {/* // 03 DATA */}
+        {/* Data */}
         <FadeRise order={3}>
-          <SectionHeader index={3} label="DATA" />
           <Section icon="database" color={colors.green} title="Data">
             <Row
               label="Export data"
@@ -198,9 +193,8 @@ export default function SettingsScreen() {
           </Section>
         </FadeRise>
 
-        {/* // 04 DANGER ZONE */}
+        {/* Danger zone */}
         <FadeRise order={4}>
-          <SectionHeader index={4} label="DANGER ZONE" />
           <Section icon="alert" color={colors.red} title="Danger zone" danger>
             <Row
               label="Reset all data"
@@ -261,7 +255,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
-    marginTop: spacing.md,
+    // Captions used to space the groups; the cards carry the rhythm now.
+    marginTop: spacing.lg,
   },
   // Red hairline on the danger card only.
   sectionDanger: { borderColor: colors.red },

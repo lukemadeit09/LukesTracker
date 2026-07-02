@@ -1,6 +1,5 @@
 // Statistics over the 1707 Tabula Selenographica — charted hemispheres for
-// a screen about measurement. Sections: // 01 OVERVIEW  // 02 TREND
-// // 03 WEEKDAY HEAT  // 04 GOAL FORECASTS
+// a screen about measurement.
 // Accent budget: greenBright (on-track/success text) + red (behind/overdue).
 
 import React, { useMemo } from 'react';
@@ -74,9 +73,9 @@ export default function StatsScreen() {
           <Text style={styles.sub}>Your progress over time.</Text>
         </FadeRise>
 
-        {/* // 01 OVERVIEW */}
+        {/* Overview stats */}
         <FadeRise order={1}>
-          <SectionHeader index={1} label="OVERVIEW" />
+          <SectionHeader />
 
           <View style={styles.statRow}>
             <StatCard value={`${Math.round(avg * 100)}%`} label="14-day avg" emphasized />
@@ -95,9 +94,9 @@ export default function StatsScreen() {
           </View>
         </FadeRise>
 
-        {/* // 02 TREND */}
+        {/* Trend chart */}
         <FadeRise order={2}>
-          <SectionHeader index={2} label="TREND" title="Last 14 days" />
+          <SectionHeader title="Last 14 days" />
           <Card style={styles.panel}>
             {state.tasks.length === 0 ? (
               <Text style={styles.empty}>Add daily habits to start charting your activity.</Text>
@@ -107,9 +106,9 @@ export default function StatsScreen() {
           </Card>
         </FadeRise>
 
-        {/* // 03 WEEKDAY HEAT */}
+        {/* Weekday heat */}
         <FadeRise order={3}>
-          <SectionHeader index={3} label="WEEKDAY HEAT" title="Completion by day of week" />
+          <SectionHeader title="Completion by day of week" />
           <Card style={styles.panel}>
             {heat.map((h) => (
               <View key={h.weekday} style={styles.heatRow}>
@@ -123,9 +122,9 @@ export default function StatsScreen() {
           </Card>
         </FadeRise>
 
-        {/* // 04 GOAL FORECASTS */}
+        {/* Goal forecasts */}
         <FadeRise order={4}>
-          <SectionHeader index={4} label="GOAL FORECASTS" title="Pace toward your targets" />
+          <SectionHeader title="Pace toward your targets" />
           {state.goals.length === 0 ? (
             <Text style={styles.empty}>No goals yet — create one to see a prediction.</Text>
           ) : (

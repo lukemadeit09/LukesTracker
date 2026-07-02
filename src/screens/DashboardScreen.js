@@ -1,6 +1,5 @@
-// Home: huge TODAY masthead over the Flammarion engraving (blue variant),
-// quote of the day, stat row, animated day progress, activity grid, habits.
-// Sections: // 01 TODAY  // 02 QUOTE  // 03 ACTIVITY  // 04 HABITS
+// Home: the daily message as hero over the Flammarion engraving (blue
+// variant), quote of the day, stats, animated day progress, grid, habits.
 // Accent budget on this screen: blue (activity) + greenBright (all done).
 
 import React, { useState } from 'react';
@@ -75,9 +74,9 @@ export default function DashboardScreen() {
             <Text style={styles.message}>{messageForScore(score, today)}</Text>
           </FadeRise>
 
-          {/* // 01 TODAY */}
+          {/* Today stats */}
           <FadeRise order={1}>
-            <SectionHeader index={1} label="TODAY" />
+            <SectionHeader />
             <View style={styles.statRow}>
               <StatCard value={streak} label="Day streak" emphasized />
               <StatCard
@@ -101,15 +100,15 @@ export default function DashboardScreen() {
             </View>
           </FadeRise>
 
-          {/* // 02 QUOTE — the card carries its own "// QUOTE OF THE DAY" caption */}
+          {/* Quote of the day */}
           <FadeRise order={2}>
             <View style={styles.quoteSpacer} />
-            <QuoteCard index={2} />
+            <QuoteCard />
           </FadeRise>
 
-          {/* // 03 ACTIVITY */}
+          {/* Activity grid */}
           <FadeRise order={3}>
-            <SectionHeader index={3} label="ACTIVITY" />
+            <SectionHeader />
             <Card style={styles.gridCard}>
               <ContributionGrid scoreFor={(key) => dayScore(key)} />
               {activeDays === 0 && (
@@ -120,9 +119,9 @@ export default function DashboardScreen() {
             </Card>
           </FadeRise>
 
-          {/* // 04 HABITS */}
+          {/* Habits */}
           <FadeRise order={4}>
-            <SectionHeader index={4} label="HABITS" />
+            <SectionHeader />
 
             {tasks.length === 0 ? (
               <Card style={styles.emptyCard}>

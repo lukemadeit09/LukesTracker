@@ -52,13 +52,11 @@ describe('StatsScreen', () => {
     expect(await findByText('Total check-ins')).toBeTruthy();
   });
 
-  test('renders a "#3 WEEKDAY HEAT" section with 7 rows labeled SUN..SAT', async () => {
+  test('renders the weekday heat section with 7 rows labeled SUN..SAT', async () => {
     const { findByText } = await render(<Harness />);
 
-    // SectionHeader renders "> #3  WEEKDAY HEAT" as one caption Text node
-    // (index/label are concatenated JSX children, not separate nodes) plus
-    // a separate title Text below it.
-    expect(await findByText(/WEEKDAY HEAT/)).toBeTruthy();
+    // The numbered "// 03 WEEKDAY HEAT" captions were retired; the section
+    // is identified by its display title alone.
     expect(await findByText('Completion by day of week')).toBeTruthy();
 
     // weekdayHeat() always returns exactly 7 entries, Sun through Sat.

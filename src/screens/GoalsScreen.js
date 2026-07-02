@@ -1,5 +1,5 @@
 // Goals: create any goal (target + unit + deadline) and track it, over the
-// Piranesi staircase — the climb. Sections: // 01 IN PROGRESS  // 02 NEW GOAL
+// Piranesi staircase — the climb.
 // Accent budget on this screen: red (behind/overdue) + green (done/on track),
 // both inside GoalCard. The art stays white.
 
@@ -67,9 +67,9 @@ export default function GoalsScreen() {
           <Text style={styles.sub}>Set a target, pick a deadline, track your pace.</Text>
         </FadeRise>
 
-        {/* // 01 IN PROGRESS */}
+        {/* Goals in progress */}
         <FadeRise order={1}>
-          {hasGoals && <SectionHeader index={1} label="IN PROGRESS" />}
+          {hasGoals && <SectionHeader />}
 
           {!hasGoals && !open && (
             <Card style={styles.emptyCard}>
@@ -94,11 +94,11 @@ export default function GoalsScreen() {
           </View>
         </FadeRise>
 
-        {/* // 02 NEW GOAL */}
+        {/* Add form */}
         <FadeRise order={2}>
           {open ? (
             <>
-              <SectionHeader index={hasGoals ? 2 : 1} label="NEW GOAL" />
+              <SectionHeader />
               <Card style={styles.form}>
                 <TextInput
                   style={styles.input}

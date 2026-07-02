@@ -4,6 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, AccessibilityInfo } from 'react-native';
+import { useApp } from '../../context/AppContext';
 
 const ART = {
   flammarion: require('../../../assets/art/flammarion.png'),
@@ -16,9 +17,12 @@ const ART = {
 const BREATHE_MS = 7000;
 
 export default function ArtBackdrop({ source, min = 0.08, max = 0.12 }) {
+  const { state } = useApp();
+  const artEnabled = state.settings.artEnabled !== false;
   const opacity = useRef(new Animated.Value(min)).current;
 
   useEffect(() => {
+    if (!artEnabled) return undefined;
     let loop;
     let cancelled = false;
     // Respect reduce-motion: hold a static opacity instead of animating.
@@ -40,7 +44,9 @@ export default function ArtBackdrop({ source, min = 0.08, max = 0.12 }) {
       cancelled = true;
       if (loop) loop.stop();
     };
-  }, [opacity, min, max]);
+  }, [opacity, min, max, artEnabled]);
+
+  if (!artEnabled) return null;
 
   return (
     <Animated.Image

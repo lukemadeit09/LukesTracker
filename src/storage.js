@@ -15,6 +15,7 @@ export const emptyState = {
     reminderEnabled: false,
     reminderHour: 20, // 8pm default
     reminderMinute: 0,
+    artEnabled: true, // background engravings on/off (Settings > Appearance)
   },
 };
 

@@ -23,6 +23,7 @@ export const colors = {
   red: '#6e1423',    // urgent / behind / overdue
   green: '#0f3d28',  // done (fills, borders)
   greenBright: '#4ade80', // small "on track" / success text ONLY
+  purple: '#3d1a5c', // settings icon tiles only (appearance)
 
   // Semantic aliases.
   background: '#000000',
@@ -81,6 +82,7 @@ export const radius = {
   none: 0,
   sm: 4,
   md: 8,
+  lg: 12, // grouped settings section cards
   dock: 28, // floating tab dock + its active pill
   pill: 999,
 };

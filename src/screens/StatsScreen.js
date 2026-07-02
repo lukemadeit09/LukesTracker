@@ -70,7 +70,6 @@ export default function StatsScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <FadeRise order={0}>
-          <Text style={styles.kicker}>{'// LUKES TRACKER'}</Text>
           <Text style={styles.masthead}>STATS</Text>
           <Text style={styles.sub}>Your progress over time.</Text>
         </FadeRise>
@@ -176,13 +175,6 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.md, paddingBottom: 120 },
-  kicker: {
-    fontFamily: fontFamily.mono,
-    fontSize: font.tiny,
-    letterSpacing: tracking.label,
-    color: colors.textMuted,
-    marginTop: spacing.sm,
-  },
   masthead: {
     fontFamily: fontFamily.display,
     fontSize: font.display,

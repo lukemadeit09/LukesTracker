@@ -70,10 +70,8 @@ export default function DashboardScreen() {
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Masthead */}
+          {/* Masthead: the day's message is the hero */}
           <FadeRise order={0}>
-            <Text style={styles.kicker}>{'// LUKES TRACKER'}</Text>
-            <Text style={styles.masthead}>TODAY</Text>
             <Text style={styles.message}>{messageForScore(score, today)}</Text>
           </FadeRise>
 
@@ -188,26 +186,15 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   // Bottom padding clears the floating dock.
   content: { padding: spacing.md, paddingBottom: 120 },
-  kicker: {
-    fontFamily: fontFamily.mono,
-    fontSize: font.tiny,
-    letterSpacing: tracking.label,
-    color: colors.textMuted,
-    marginTop: spacing.sm,
-  },
-  masthead: {
-    fontFamily: fontFamily.display,
-    fontSize: font.display,
-    letterSpacing: tracking.display,
-    color: colors.textPrimary,
-    marginTop: spacing.xs,
-  },
+  // With the brand kicker and TODAY heading gone, the daily message
+  // carries the masthead role at display weight.
   message: {
-    fontFamily: fontFamily.displayMed,
-    fontSize: font.h2,
-    lineHeight: 26,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
+    fontFamily: fontFamily.display,
+    fontSize: font.h1,
+    letterSpacing: tracking.h1,
+    lineHeight: 38,
+    color: colors.textPrimary,
+    marginTop: spacing.sm,
   },
   statRow: { flexDirection: 'row', marginTop: spacing.md, marginLeft: -spacing.xs },
   progressWrap: { marginTop: spacing.md },

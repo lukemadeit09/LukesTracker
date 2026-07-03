@@ -8,13 +8,17 @@
     "userInterfaceStyle": "dark",
     "backgroundColor": "#000000",
     "splash": {
+      "image": "./assets/splash-icon.png",
       "backgroundColor": "#000000",
       "resizeMode": "contain"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.luke.lukestracker",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.luke.lukestracker",
       "adaptiveIcon": {
         "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",

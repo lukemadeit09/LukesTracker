@@ -1,5 +1,5 @@
-// Statistics over the 1707 Tabula Selenographica — charted hemispheres for
-// a screen about measurement.
+// Statistics over the 1707 Tabula Selenographica (dark green) — charted
+// hemispheres for a screen about measurement.
 // Accent budget: greenBright (on-track/success text) + red (behind/overdue).
 
 import React, { useMemo } from 'react';
@@ -65,7 +65,8 @@ export default function StatsScreen() {
 
   return (
     <View style={styles.screen}>
-      <ArtBackdrop source="moon" />
+      {/* Dark-green moon chart; tint is baked dark, so opacity runs higher. */}
+      <ArtBackdrop source="moonGreen" min={0.5} max={0.7} />
 
       <ScrollView contentContainerStyle={styles.content}>
         <FadeRise order={0}>

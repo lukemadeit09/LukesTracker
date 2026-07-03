@@ -11,10 +11,11 @@ export function predictGoal(goal, now = new Date()) {
   const percent = target > 0 ? Math.min(1, current / target) : 0;
 
   // Days since the goal was created (at least 1 so we never divide by zero).
-  const elapsed = Math.max(1, -daysUntil(goal.createdAt));
+  // `now` is honored here (not just accepted): all day math pins to it.
+  const elapsed = Math.max(1, -daysUntil(goal.createdAt, now));
   const ratePerDay = current / elapsed; // average progress per day so far
 
-  const daysLeft = goal.deadline ? daysUntil(goal.deadline) : null;
+  const daysLeft = goal.deadline ? daysUntil(goal.deadline, now) : null;
 
   // Already finished.
   if (target > 0 && current >= target) {

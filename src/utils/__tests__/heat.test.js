@@ -11,7 +11,7 @@ describe('weekdayHeat', () => {
   const tasks = [{ id: 't1' }, { id: 't2' }];
 
   test('always returns 7 entries, Sun (0) through Sat (6), with labels', () => {
-    const result = weekdayHeat([], {}, 14);
+    const result = weekdayHeat([], {}, 14, now);
     expect(result).toHaveLength(7);
     expect(result.map((r) => r.weekday)).toEqual([0, 1, 2, 3, 4, 5, 6]);
     expect(result.map((r) => r.label)).toEqual([
@@ -20,24 +20,24 @@ describe('weekdayHeat', () => {
   });
 
   test('no tasks -> every weekday avgScore is 0', () => {
-    const result = weekdayHeat([], {}, 30);
+    const result = weekdayHeat([], {}, 30, now);
     expect(result.every((r) => r.avgScore === 0)).toBe(true);
   });
 
   test('no completions but tasks exist -> every day in window scores 0', () => {
-    const result = weekdayHeat(tasks, {}, 14);
+    const result = weekdayHeat(tasks, {}, 14, now);
     expect(result.every((r) => r.avgScore === 0)).toBe(true);
   });
 
   test('windowDays of 0 -> no days scanned, everything 0', () => {
-    const result = weekdayHeat(tasks, {}, 0);
+    const result = weekdayHeat(tasks, {}, 0, now);
     expect(result.every((r) => r.avgScore === 0)).toBe(true);
   });
 
   test('a fully-completed Thursday contributes a score of 1 to THU', () => {
     // "now" itself is a Thursday.
     const completions = { [dayKey(now)]: ['t1', 't2'] };
-    const result = weekdayHeat(tasks, completions, 1);
+    const result = weekdayHeat(tasks, completions, 1, now);
     const thu = result.find((r) => r.label === 'THU');
     expect(thu.avgScore).toBe(1);
   });
@@ -48,7 +48,7 @@ describe('weekdayHeat', () => {
       [dayKey(now)]: ['t1', 't2'], // 2/2 = 1
       [daysAgo(7, now)]: ['t1'],   // 1/2 = 0.5
     };
-    const result = weekdayHeat(tasks, completions, 8);
+    const result = weekdayHeat(tasks, completions, 8, now);
     const thu = result.find((r) => r.label === 'THU');
     expect(thu.avgScore).toBeCloseTo(0.75); // (1 + 0.5) / 2
   });
@@ -56,7 +56,7 @@ describe('weekdayHeat', () => {
   test('a weekday with no days in a short window stays at 0, not NaN', () => {
     // windowDays=1 only includes "today" (Thursday), so every other weekday
     // has zero days counted and must default to 0 rather than 0/0.
-    const result = weekdayHeat(tasks, {}, 1);
+    const result = weekdayHeat(tasks, {}, 1, now);
     const mon = result.find((r) => r.label === 'MON');
     expect(mon.avgScore).toBe(0);
     expect(Number.isNaN(mon.avgScore)).toBe(false);
@@ -66,12 +66,12 @@ describe('weekdayHeat', () => {
     const completions = {
       [daysAgo(100, now)]: ['t1', 't2'], // far outside a 14-day window
     };
-    const result = weekdayHeat(tasks, completions, 14);
+    const result = weekdayHeat(tasks, completions, 14, now);
     expect(result.every((r) => r.avgScore === 0)).toBe(true);
   });
 
   test('malformed inputs do not throw', () => {
-    expect(() => weekdayHeat(null, null, 14)).not.toThrow();
+    expect(() => weekdayHeat(null, null, 14, now)).not.toThrow();
     expect(() => weekdayHeat(undefined, undefined)).not.toThrow();
   });
 });

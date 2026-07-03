@@ -6,12 +6,13 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, AccessibilityInfo } from 'react-native';
 import { useApp } from '../../context/AppContext';
 
+// Colored variants bake their tint into the PNG; the dark red/green ones
+// render at higher opacity since the pixels themselves are near-black.
 const ART = {
-  flammarion: require('../../../assets/art/flammarion.png'),
   flammarionBlue: require('../../../assets/art/flammarion-blue.png'),
   piranesi: require('../../../assets/art/piranesi.png'),
-  moon: require('../../../assets/art/moon.png'),
-  dore: require('../../../assets/art/dore.png'),
+  paradisoRed: require('../../../assets/art/paradiso-red.png'),
+  moonGreen: require('../../../assets/art/moon-green.png'),
 };
 
 const BREATHE_MS = 7000;

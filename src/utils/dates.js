@@ -28,12 +28,12 @@ export function lastNDays(count, end = new Date()) {
   return out;
 }
 
-// Whole days from today until a 'YYYY-MM-DD' deadline (can be negative).
-export function daysUntil(deadlineKey) {
+// Whole days from `now`'s calendar day until a 'YYYY-MM-DD' deadline
+// (can be negative). `now` is injectable so callers (and tests) can pin time.
+export function daysUntil(deadlineKey, now = new Date()) {
   if (!deadlineKey) return null;
   const [y, m, d] = deadlineKey.split('-').map(Number);
   const deadline = new Date(y, m - 1, d);
-  const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((deadline - startOfToday) / (1000 * 60 * 60 * 24));
 }

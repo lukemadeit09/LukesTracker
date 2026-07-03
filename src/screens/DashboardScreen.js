@@ -1,6 +1,5 @@
-// Home: the daily message as hero over the Flammarion engraving (blue
-// variant), quote of the day, stats, animated day progress, grid, habits.
-// Accent budget on this screen: blue (activity) + greenBright (all done).
+// Home: the daily message as hero over Dore's Paradiso rose (blood red),
+// quote of the day, stats, animated day progress, grid, habits.
 
 import React, { useState } from 'react';
 import {
@@ -59,7 +58,8 @@ export default function DashboardScreen() {
 
   return (
     <View style={styles.screen}>
-      <ArtBackdrop source="flammarionBlue" />
+      {/* Blood-red Paradiso rose; tint is baked dark, so opacity runs higher. */}
+      <ArtBackdrop source="paradisoRed" min={0.5} max={0.7} />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}

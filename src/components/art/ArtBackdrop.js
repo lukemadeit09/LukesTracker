@@ -9,7 +9,7 @@ import { useApp } from '../../context/AppContext';
 // Colored variants bake their tint into the PNG; the dark red/green ones
 // render at higher opacity since the pixels themselves are near-black.
 const ART = {
-  flammarionBlue: require('../../../assets/art/flammarion-blue.png'),
+  armillaryBlue: require('../../../assets/art/armillary-blue.png'),
   piranesi: require('../../../assets/art/piranesi.png'),
   paradisoRed: require('../../../assets/art/paradiso-red.png'),
   moonGreen: require('../../../assets/art/moon-green.png'),

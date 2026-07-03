@@ -120,8 +120,9 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* More prominent than other screens, per spec — cards keep it readable. */}
-      <ArtBackdrop source="flammarionBlue" min={0.15} max={0.18} />
+      {/* Blue armillary sphere, more prominent than other screens — cards
+          keep it readable. */}
+      <ArtBackdrop source="armillaryBlue" min={0.15} max={0.18} />
 
       <ScrollView contentContainerStyle={styles.content}>
         <FadeRise order={0}>

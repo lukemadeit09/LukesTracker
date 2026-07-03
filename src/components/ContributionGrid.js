@@ -1,6 +1,6 @@
 // GitHub-style activity grid. Columns = weeks, rows = weekdays.
 // Each square fills with a grayscale step based on that day's score (0..1);
-// today is ringed in blue (blue = activity). Columns cascade in on mount.
+// today is ringed in the backdrop red. Columns cascade in on mount.
 
 import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, StyleSheet, Animated, AccessibilityInfo } from 'react-native';
@@ -164,8 +164,8 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: GAP,
   },
-  // Blue = activity: today's square is always identifiable.
-  todayRing: { borderWidth: 1.5, borderColor: colors.blue },
+  // Today's ring matches Home's blood-red backdrop art.
+  todayRing: { borderWidth: 1.5, borderColor: colors.red },
   legend: {
     flexDirection: 'row',
     alignItems: 'center',

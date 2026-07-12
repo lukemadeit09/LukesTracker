@@ -1,21 +1,28 @@
 // Local daily reminders via expo-notifications.
 // Only local scheduling is used (no push servers), which works in Expo Go.
+// expo-notifications does not support web: every entry point below no-ops
+// there (the Settings UI explains reminders aren't available on web).
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { randomReminder } from './quotes';
 
+const isWeb = Platform.OS === 'web';
+
 // Show alerts even when the app is foregrounded.
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+if (!isWeb) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 export async function ensurePermission() {
+  if (isWeb) return false;
   const settings = await Notifications.getPermissionsAsync();
   if (settings.granted) return true;
   const req = await Notifications.requestPermissionsAsync();
@@ -25,6 +32,7 @@ export async function ensurePermission() {
 // Schedule a single repeating daily reminder at the given time.
 // Returns true on success. Clears any previously scheduled reminders first.
 export async function scheduleDailyReminder(hour, minute) {
+  if (isWeb) return false;
   const ok = await ensurePermission();
   if (!ok) return false;
 
@@ -52,6 +60,7 @@ export async function scheduleDailyReminder(hour, minute) {
 }
 
 export async function cancelReminders() {
+  if (isWeb) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
@@ -71,6 +80,7 @@ const MILESTONE_COPY = {
 // including missing permission, so a goal card never surfaces a permission
 // prompt (that belongs to the Settings flow only).
 export async function sendMilestoneNotification(goalTitle, percent) {
+  if (isWeb) return false;
   try {
     const ok = await ensurePermission();
     if (!ok) return false;

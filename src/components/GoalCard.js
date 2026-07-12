@@ -3,7 +3,16 @@
 // per-goal milestone notification toggle.
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Pressable, Switch, StyleSheet, AccessibilityInfo, Animated } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  Switch,
+  StyleSheet,
+  AccessibilityInfo,
+  Animated,
+  Platform,
+} from 'react-native';
 import Card from './Card';
 import {
   colors,
@@ -232,8 +241,8 @@ export default function GoalCard({ goal, onChange, onRemove }) {
         </Pressable>
       </View>
 
-      {/* Per-goal milestone notification toggle */}
-      {goal.target > 0 && (
+      {/* Per-goal milestone notification toggle (no notifications on web) */}
+      {goal.target > 0 && Platform.OS !== 'web' && (
         <View style={styles.notifyRow}>
           <View style={styles.notifyTextWrap}>
             <View style={styles.notifyLabelRow}>

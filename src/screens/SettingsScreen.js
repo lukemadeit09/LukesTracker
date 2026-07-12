@@ -130,33 +130,45 @@ export default function SettingsScreen() {
           <Text style={styles.sub}>Reminders keep your streak alive.</Text>
         </FadeRise>
 
-        {/* Reminders */}
+        {/* Reminders — expo-notifications has no web support, so the web
+            app states that plainly instead of showing dead controls. */}
         <FadeRise order={1}>
           <Section icon="bell" color={colors.blue} title="Reminders">
-            <Row
-              label="Daily reminder"
-              hint="A nudge to check in every day"
-              right={
-                <Switch value={reminderEnabled} onValueChange={toggleReminder} {...switchColors} />
-              }
-            />
-            <Row
-              label="Reminder time"
-              disabled={!reminderEnabled}
-              onPress={() => setShowPicker(true)}
-              right={<Text style={styles.rowValue}>{fmtTime(reminderHour, reminderMinute)}</Text>}
-              last
-            />
-            {showPicker && (
-              <DateTimePicker
-                value={new Date(2020, 0, 1, reminderHour, reminderMinute)}
-                mode="time"
-                themeVariant="dark"
-                onChange={(event, selected) => {
-                  setShowPicker(Platform.OS === 'ios');
-                  if (event.type !== 'dismissed' && selected) changeTime(selected);
-                }}
+            {Platform.OS === 'web' ? (
+              <Row
+                label="Daily reminder"
+                hint="Notifications aren't available in the web app — use the iOS/Android app for reminders"
+                right={<Text style={styles.rowValue}>N/A</Text>}
+                last
               />
+            ) : (
+              <>
+                <Row
+                  label="Daily reminder"
+                  hint="A nudge to check in every day"
+                  right={
+                    <Switch value={reminderEnabled} onValueChange={toggleReminder} {...switchColors} />
+                  }
+                />
+                <Row
+                  label="Reminder time"
+                  disabled={!reminderEnabled}
+                  onPress={() => setShowPicker(true)}
+                  right={<Text style={styles.rowValue}>{fmtTime(reminderHour, reminderMinute)}</Text>}
+                  last
+                />
+                {showPicker && (
+                  <DateTimePicker
+                    value={new Date(2020, 0, 1, reminderHour, reminderMinute)}
+                    mode="time"
+                    themeVariant="dark"
+                    onChange={(event, selected) => {
+                      setShowPicker(Platform.OS === 'ios');
+                      if (event.type !== 'dismissed' && selected) changeTime(selected);
+                    }}
+                  />
+                )}
+              </>
             )}
           </Section>
         </FadeRise>

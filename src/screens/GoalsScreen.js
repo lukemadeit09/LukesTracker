@@ -126,31 +126,51 @@ export default function GoalsScreen() {
                   />
                 </View>
 
-                <Pressable
-                  style={styles.dateBtn}
-                  onPress={() => setShowPicker(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    deadline ? `Deadline, ${deadline.toDateString()}` : 'Pick a deadline, optional'
-                  }
-                >
-                  <Text style={styles.dateBtnText}>
-                    {deadline ? `DEADLINE: ${deadline.toDateString()}` : 'PICK A DEADLINE (OPTIONAL)'}
-                  </Text>
-                </Pressable>
-
-                {showPicker && (
-                  <DateTimePicker
-                    value={deadline || new Date()}
-                    mode="date"
-                    minimumDate={new Date()}
-                    themeVariant="dark"
-                    onChange={(event, selected) => {
-                      // Android closes the dialog itself; iOS stays inline.
-                      setShowPicker(Platform.OS === 'ios');
-                      if (event.type !== 'dismissed' && selected) setDeadline(selected);
+                {Platform.OS === 'web' ? (
+                  // The native picker has no web implementation; a plain
+                  // date input renders fine under react-native-web.
+                  <input
+                    type="date"
+                    aria-label="Deadline (optional)"
+                    min={dayKey(new Date())}
+                    value={deadline ? dayKey(deadline) : ''}
+                    onChange={(e) => {
+                      const v = e.target.value; // 'YYYY-MM-DD' or ''
+                      if (!v) return setDeadline(null);
+                      const [y, m, d] = v.split('-').map(Number);
+                      setDeadline(new Date(y, m - 1, d));
                     }}
+                    style={webDateInputStyle}
                   />
+                ) : (
+                  <>
+                    <Pressable
+                      style={styles.dateBtn}
+                      onPress={() => setShowPicker(true)}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        deadline ? `Deadline, ${deadline.toDateString()}` : 'Pick a deadline, optional'
+                      }
+                    >
+                      <Text style={styles.dateBtnText}>
+                        {deadline ? `DEADLINE: ${deadline.toDateString()}` : 'PICK A DEADLINE (OPTIONAL)'}
+                      </Text>
+                    </Pressable>
+
+                    {showPicker && (
+                      <DateTimePicker
+                        value={deadline || new Date()}
+                        mode="date"
+                        minimumDate={new Date()}
+                        themeVariant="dark"
+                        onChange={(event, selected) => {
+                          // Android closes the dialog itself; iOS stays inline.
+                          setShowPicker(Platform.OS === 'ios');
+                          if (event.type !== 'dismissed' && selected) setDeadline(selected);
+                        }}
+                      />
+                    )}
+                  </>
                 )}
 
                 <View style={styles.row}>
@@ -180,6 +200,21 @@ export default function GoalsScreen() {
     </View>
   );
 }
+
+// Plain-object style for the web-only <input type="date"> (DOM element,
+// so it takes CSS properties rather than a StyleSheet).
+const webDateInputStyle = {
+  backgroundColor: colors.surfaceSolid,
+  color: colors.textPrimary,
+  borderRadius: radius.sm,
+  padding: spacing.md,
+  fontFamily: 'SpaceMono_400Regular, monospace',
+  fontSize: font.monoSmall,
+  letterSpacing: 1,
+  border: `1px solid ${colors.border}`,
+  marginBottom: spacing.md,
+  colorScheme: 'dark',
+};
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },

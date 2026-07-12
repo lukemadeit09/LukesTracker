@@ -7,6 +7,18 @@
       "runtimeArgs": ["expo", "start", "--web", "--port", "8083"],
       "port": 8083,
       "autoPort": false
+    },
+    {
+      "name": "pages-dist",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "serve",
+        "-l",
+        "8084",
+        "/private/tmp/claude-501/-Users-luke-Desktop-LukesTracker/312c9dc5-faf7-4b5d-82d7-89647f37f1f2/scratchpad/pages-root"
+      ],
+      "port": 8084,
+      "autoPort": false
     }
   ]
 }

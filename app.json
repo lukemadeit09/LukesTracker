@@ -29,6 +29,9 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "experiments": {
+      "baseUrl": "/LukesTracker"
+    },
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-font"
